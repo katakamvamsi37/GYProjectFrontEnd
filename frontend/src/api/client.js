@@ -16,7 +16,9 @@ export function saveSession(value) {
   if (value) sessionStorage.setItem(STORAGE_KEY, JSON.stringify(value));
   else sessionStorage.removeItem(STORAGE_KEY);
 }
-const baseURL = import.meta.env.VITE_API_URL || '/api';
+const baseURL = (
+  import.meta.env.VITE_API_URL?.trim() || 'https://gyproject.onrender.com/api'
+).replace(/\/+$/, '');
 const apiClient = axios.create({ baseURL, timeout: 20000 });
 apiClient.interceptors.request.use((config) => {
   if (session?.access) config.headers.Authorization = `Bearer ${session.access}`;

@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: gy-project-frontend
+    runtime: node
+    buildCommand: npm ci && npm run build
+    startCommand: node server.cjs
+    envVars:
+      - key: VITE_API_URL
+        sync: false

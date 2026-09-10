@@ -5,6 +5,7 @@ import { signup, updateAccess } from '../api/auth';
 import { errorMessage } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import Modal from '../components/Modal';
+import ResetPasswordDialog from '../components/ResetPasswordDialog';
 import { ErrorNotice, Loading, EmptyState } from '../components/Feedback';
 
 const roles = ['admin', 'treasurer', 'secretary', 'coordinator', 'member'];
@@ -16,13 +17,15 @@ export default function Users() {
   const [form, setForm] = useState({});
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [passwordAccount, setPasswordAccount] = useState(null);
+  const [message, setMessage] = useState('');
   const open = (account) => {
     setError('');
     setSelected(account);
     setForm(
       account
         ? { role: account.role, is_active: account.is_active }
-        : { name: '', email: '', password: '', role: 'member' },
+        : { name: '', email: '', phone: '', password: '', role: 'member' },
     );
   };
   const save = async (event) => {
@@ -59,6 +62,11 @@ export default function Users() {
         the member to change their password in My profile.
       </div>
       <section className="panel records-panel">
+        {message && (
+          <p className="notice success" role="status">
+            {message}
+          </p>
+        )}
         {records.error ? (
           <ErrorNotice message={records.error} onRetry={records.reload} />
         ) : records.loading ? (
@@ -72,6 +80,7 @@ export default function Users() {
                 <tr>
                   <th>Name</th>
                   <th>Email / username</th>
+                  <th>Mobile number</th>
                   <th>Role</th>
                   <th>Status</th>
                   <th>Actions</th>
@@ -84,6 +93,7 @@ export default function Users() {
                       <strong>{account.name}</strong>
                     </td>
                     <td>{account.email || account.username}</td>
+                    <td>{account.phone || 'Not added'}</td>
                     <td>{account.authority}</td>
                     <td>
                       <span className={`badge ${account.is_active ? 'approved' : 'void'}`}>
@@ -92,9 +102,20 @@ export default function Users() {
                     </td>
                     <td>
                       {account.id !== user.id && (
-                        <button className="table-action" onClick={() => open(account)}>
-                          Manage access
-                        </button>
+                        <div className="account-actions">
+                          <button className="table-action" onClick={() => open(account)}>
+                            Manage access
+                          </button>
+                          <button
+                            className="table-action"
+                            onClick={() => {
+                              setMessage('');
+                              setPasswordAccount(account);
+                            }}
+                          >
+                            Reset password
+                          </button>
+                        </div>
                       )}
                     </td>
                   </tr>
@@ -154,6 +175,17 @@ export default function Users() {
                     />
                   </label>
                   <label className="span-two">
+                    Mobile number (optional)
+                    <input
+                      type="tel"
+                      autoComplete="tel"
+                      value={form.phone}
+                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                      placeholder="10-digit Indian number or +country code"
+                    />
+                    <small>This number can be used to sign in with the account password.</small>
+                  </label>
+                  <label className="span-two">
                     Initial password
                     <input
                       type="password"
@@ -207,6 +239,16 @@ export default function Users() {
             </div>
           </form>
         </Modal>
+      )}
+      {passwordAccount && (
+        <ResetPasswordDialog
+          account={passwordAccount}
+          onClose={() => setPasswordAccount(null)}
+          onSuccess={(message) => {
+            setMessage(message);
+            setPasswordAccount(null);
+          }}
+        />
       )}
     </>
   );

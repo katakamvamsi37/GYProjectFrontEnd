@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 async function signIn(page, role = 'admin') {
   await page.goto('/signin');
-  await page.getByLabel('Email or username').fill(role);
+  await page.getByLabel('Email, mobile number or username').fill(role);
   await page.getByLabel('Password', { exact: true }).fill('BrowserTest!234');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Festival overview.' })).toBeVisible();

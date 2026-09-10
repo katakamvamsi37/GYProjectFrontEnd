@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Save, ShieldCheck, KeyRound } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { updateProfile } from '../api/profile';
 import { changePassword } from '../api/auth';
 import { saveSession, errorMessage } from '../api/client';
 import { ErrorNotice } from '../components/Feedback';
+import Avatar from '../components/Avatar';
 
 export default function Profile() {
   const { user, updateUser } = useAuth();
@@ -12,21 +13,51 @@ export default function Profile() {
     name: user.name,
     email: user.email,
     phone: user.phone,
-    avatar_url: user.avatar_url,
   });
+  const [avatar, setAvatar] = useState(null);
+  const [preview, setPreview] = useState('');
+  const fileInput = useRef(null);
+  useEffect(() => {
+    if (!avatar) {
+      setPreview('');
+      return;
+    }
+    const url = URL.createObjectURL(avatar);
+    setPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [avatar]);
   const [passwords, setPasswords] = useState({ current_password: '', new_password: '' });
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [busy, setBusy] = useState(false);
+  const choosePhoto = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setError('');
+    setMessage('');
+    if (
+      !['image/jpeg', 'image/png', 'image/webp'].includes(file.type) ||
+      file.size > 5 * 1024 * 1024
+    ) {
+      setError('Choose a JPEG, PNG or WebP image no larger than 5 MB.');
+      event.target.value = '';
+      setAvatar(null);
+      return;
+    }
+    setAvatar(file);
+  };
   const save = async (event) => {
     event.preventDefault();
     setBusy(true);
     setError('');
     setMessage('');
     try {
-      const { data } = await updateProfile(user.id, form);
+      const { data } = await updateProfile(user.id, form, avatar);
       updateUser(data.user);
+      setForm({ name: data.user.name, email: data.user.email, phone: data.user.phone });
+      setAvatar(null);
+      if (fileInput.current) fileInput.current.value = '';
       setMessage('Profile updated.');
     } catch (error) {
       setError(errorMessage(error));
@@ -61,7 +92,7 @@ export default function Profile() {
       <div className="profile-grid">
         <section className="panel">
           <div className="profile-summary">
-            <span className="avatar large">{user.name.slice(0, 2).toUpperCase()}</span>
+            <Avatar user={user} src={preview || user.avatar_url} large />
             <div>
               <h2>{user.name}</h2>
               <p>{user.authority}</p>
@@ -69,21 +100,34 @@ export default function Profile() {
             <ShieldCheck />
           </div>
           <form className="record-form" onSubmit={save}>
+            <label className="profile-photo-picker">
+              Profile photo
+              <input
+                ref={fileInput}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                disabled={busy}
+                onChange={choosePhoto}
+              />
+              <small>Choose a photo from your device. JPEG, PNG or WebP, up to 5 MB.</small>
+              {avatar && <small>Preview selected. Save profile to upload this photo.</small>}
+            </label>
             <div className="form-grid">
               {[
                 ['name', 'Full name', 'text'],
                 ['email', 'Email address', 'email'],
                 ['phone', 'Mobile number', 'tel'],
-                ['avatar_url', 'Profile image URL', 'url'],
               ].map(([key, label, type]) => (
                 <label key={key}>
                   {label}
                   <input
                     type={type}
+                    disabled={busy}
                     required={key === 'name' || key === 'email'}
                     value={form[key]}
                     onChange={(e) => setForm({ ...form, [key]: e.target.value })}
                   />
+                  {key === 'phone' && <small>Use this number with your password to sign in.</small>}
                 </label>
               ))}
             </div>

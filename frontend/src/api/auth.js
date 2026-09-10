@@ -5,3 +5,5 @@ export const logout = (refresh) => api.post('/logout/', { refresh });
 export const changePassword = (payload) => api.post('/auth/password/change/', payload);
 export const signup = (payload) => api.post('/signup/', payload);
 export const updateAccess = (id, payload) => api.patch(`/users/${id}/access/`, payload);
+export const resetUserPassword = (id, newPassword) =>
+  api.post(`/users/${id}/password/`, { new_password: newPassword });

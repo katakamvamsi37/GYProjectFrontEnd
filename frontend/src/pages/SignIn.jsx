@@ -9,7 +9,7 @@ export default function SignIn() {
   const { user, loading, sessionError, retry, login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [form, setForm] = useState({ email: '', password: '' });
+  const [form, setForm] = useState({ identifier: '', password: '' });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   if (loading) return <Loading label="Opening your workspace…" />;
@@ -77,13 +77,15 @@ export default function SignIn() {
           <h2>Sign in to your workspace</h2>
           <p>Use the account provided by your committee administrator.</p>
           <label>
-            Email or username
+            Email, mobile number or username
             <input
               autoComplete="username"
               required
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-              placeholder="you@example.com"
+              autoCapitalize="none"
+              spellCheck={false}
+              value={form.identifier}
+              onChange={(e) => setForm({ ...form, identifier: e.target.value })}
+              placeholder="you@example.com or mobile number"
             />
           </label>
           <label>

@@ -2,7 +2,9 @@ import js from '@eslint/js';
 import globals from 'globals';
 import hooks from 'eslint-plugin-react-hooks';
 export default [
-  { ignores: ['dist/**', 'node_modules/**', 'playwright-report/**', 'test-results/**'] },
+  {
+    ignores: ['dist/**', 'node_modules/**', '.venv*/**', 'playwright-report/**', 'test-results/**'],
+  },
   js.configs.recommended,
   {
     files: ['src/**/*.{js,jsx}'],
@@ -21,5 +23,9 @@ export default [
   {
     files: ['*.js', 'tests/**/*.js'],
     languageOptions: { globals: { ...globals.node, ...globals.browser } },
+  },
+  {
+    files: ['*.cjs'],
+    languageOptions: { sourceType: 'commonjs', globals: globals.node },
   },
 ];

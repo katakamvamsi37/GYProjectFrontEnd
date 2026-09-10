@@ -16,6 +16,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { useFestival } from '../../context/FestivalContext';
 import { managementRoles } from '../../utils/format';
+import Avatar from '../Avatar';
 
 const links = [
   ['/home', 'Overview', LayoutDashboard],
@@ -101,7 +102,7 @@ export default function DashboardLayout({ children }) {
         </div>
         <div className="sidebar-account">
           <Link to="/profile" onClick={() => setOpen(false)}>
-            <span className="avatar">{user.name.slice(0, 2).toUpperCase()}</span>
+            <Avatar user={user} />
             <span>
               <strong>{user.name}</strong>
               <small>{user.authority}</small>
@@ -141,8 +142,8 @@ export default function DashboardLayout({ children }) {
               })}
             </span>
             <span className="topbar-divider" />
-            <Link to="/profile" className="avatar" aria-label="Open my profile">
-              {user.name.slice(0, 2).toUpperCase()}
+            <Link to="/profile" aria-label="Open my profile">
+              <Avatar user={user} />
             </Link>
           </div>
         </header>

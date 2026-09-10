@@ -151,12 +151,14 @@
   margin-top: 4px;
 }
 .avatar {
+  position: relative;
   width: 34px;
   height: 34px;
   flex-shrink: 0;
   display: grid;
   place-items: center;
   border-radius: 50%;
+  overflow: hidden;
   background: #eee4ce;
   color: #7a6033;
   font-size: 11px;

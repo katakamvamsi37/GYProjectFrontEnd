@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: gy-project-frontend
+    name: ganeshyouthpeddanallakalva
     runtime: node
     buildCommand: npm ci && npm run build
     startCommand: node server.cjs

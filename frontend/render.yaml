@@ -6,4 +6,4 @@ services:
     startCommand: node server.cjs
     envVars:
       - key: VITE_API_URL
-        value: https://gyproject.onrender.com/api
+        value: http://gyproject-env-1.eba-h3s8e4pe.us-east-1.elasticbeanstalk.com/api

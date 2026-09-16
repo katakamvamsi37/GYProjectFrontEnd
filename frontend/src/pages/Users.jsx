@@ -6,6 +6,8 @@ import { errorMessage } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import Modal from '../components/Modal';
 import ResetPasswordDialog from '../components/ResetPasswordDialog';
+import Avatar from '../components/Avatar';
+import Toast from '../components/Toast';
 import { ErrorNotice, Loading, EmptyState } from '../components/Feedback';
 
 const roles = ['admin', 'treasurer', 'secretary', 'coordinator', 'member'];
@@ -35,6 +37,7 @@ export default function Users() {
     try {
       if (selected) await updateAccess(selected.id, form);
       else await signup(form);
+      setMessage(selected ? 'Account access updated.' : 'Account created successfully.');
       setSelected(undefined);
       records.reload();
     } catch (error) {
@@ -61,12 +64,16 @@ export default function Users() {
         Accounts created here are immediately active. Share initial credentials privately, and ask
         the member to change their password in My profile.
       </div>
+      <Toast message={message} onClose={() => setMessage('')} />
       <section className="panel records-panel">
-        {message && (
-          <p className="notice success" role="status">
-            {message}
-          </p>
-        )}
+        <div className="records-heading pb-5">
+          <h2>
+            Community accounts{' '}
+            {!records.loading && !records.error && (
+              <span className="count-pill">{records.count}</span>
+            )}
+          </h2>
+        </div>
         {records.error ? (
           <ErrorNotice message={records.error} onRetry={records.reload} />
         ) : records.loading ? (
@@ -74,7 +81,7 @@ export default function Users() {
         ) : !records.results.length ? (
           <EmptyState />
         ) : (
-          <div className="table-scroll">
+          <div className="table-scroll responsive-account-table">
             <table>
               <thead>
                 <tr>
@@ -89,18 +96,21 @@ export default function Users() {
               <tbody>
                 {records.results.map((account) => (
                   <tr key={account.id}>
-                    <td>
-                      <strong>{account.name}</strong>
+                    <td data-label="Account">
+                      <span className="person-cell">
+                        <Avatar user={account} />
+                        <strong>{account.name}</strong>
+                      </span>
                     </td>
-                    <td>{account.email || account.username}</td>
-                    <td>{account.phone || 'Not added'}</td>
-                    <td>{account.authority}</td>
-                    <td>
+                    <td data-label="Email / username">{account.email || account.username}</td>
+                    <td data-label="Mobile number">{account.phone || 'Not added'}</td>
+                    <td data-label="Role">{account.authority}</td>
+                    <td data-label="Status">
                       <span className={`badge ${account.is_active ? 'approved' : 'void'}`}>
                         {account.is_active ? 'Active' : 'Inactive'}
                       </span>
                     </td>
-                    <td>
+                    <td data-label="Actions">
                       {account.id !== user.id && (
                         <div className="account-actions">
                           <button className="table-action" onClick={() => open(account)}>
@@ -154,7 +164,7 @@ export default function Users() {
           busy={busy}
         >
           <form className="record-form" onSubmit={save}>
-            <div className="form-grid">
+            <fieldset className="form-grid" disabled={busy}>
               {!selected && (
                 <>
                   <label>
@@ -222,7 +232,7 @@ export default function Users() {
                   />
                 </label>
               )}
-            </div>
+            </fieldset>
             {error && <ErrorNotice message={error} />}
             <div className="form-actions">
               <button

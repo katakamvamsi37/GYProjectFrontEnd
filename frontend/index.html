@@ -3,12 +3,27 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#b85532" />
+    <link rel="icon" href="data:," />
+    <meta name="theme-color" content="#F8FAFC" />
+    <script>
+      (() => {
+        let theme = 'system';
+        try {
+          theme = localStorage.getItem('gy_theme') || 'system';
+        } catch {}
+        const dark =
+          theme === 'dark' ||
+          (theme !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+        document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+        document.querySelector('meta[name="theme-color"]').content = dark ? '#0F172A' : '#F8FAFC';
+      })();
+    </script>
     <meta
       name="description"
       content="Ganesh Youth festival management, financial review, and audit workspace."
     />
-    <title>Ganesh Youth · Festival Desk</title>
+    <title>Ganesh Youth · Community Workspace</title>
   </head>
   <body>
     <div id="root"></div>

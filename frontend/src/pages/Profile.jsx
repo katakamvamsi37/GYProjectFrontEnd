@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { Save, ShieldCheck, KeyRound } from 'lucide-react';
+import { Save, ShieldCheck, KeyRound, Palette } from 'lucide-react';
+import ThemeSwitcher from '../components/ThemeSwitcher';
+import Toast from '../components/Toast';
 import { useAuth } from '../context/AuthContext';
 import { updateProfile } from '../api/profile';
 import { changePassword } from '../api/auth';
@@ -86,9 +88,20 @@ export default function Profile() {
           <h1>
             My profile<span className="heading-dot">.</span>
           </h1>
-          <p>Your identity and responsibilities in the festival committee.</p>
+          <p>Your account, your preferences, your community.</p>
         </div>
       </div>
+      <section className="panel appearance-panel">
+        <div className="panel-heading">
+          <div>
+            <h2>Appearance</h2>
+            <p>Make yourself at home. Choose a theme or follow your device.</p>
+          </div>
+          <Palette size={20} className="text-accent" />
+        </div>
+        <ThemeSwitcher expanded />
+      </section>
+      <Toast message={message} onClose={() => setMessage('')} />
       <div className="profile-grid">
         <section className="panel">
           <div className="profile-summary">
@@ -132,14 +145,9 @@ export default function Profile() {
               ))}
             </div>
             {error && <ErrorNotice message={error} />}
-            {message && (
-              <p className="notice success" role="status">
-                {message}
-              </p>
-            )}
             <button className="button primary" disabled={busy}>
               <Save size={16} />
-              Save profile
+              {busy ? 'Saving…' : 'Save profile'}
             </button>
           </form>
         </section>

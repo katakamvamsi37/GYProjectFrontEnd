@@ -1,6 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Download, Plus, Search, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
+import {
+  Download,
+  Plus,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  FileText,
+  Users,
+  ShieldCheck,
+  LayoutGrid,
+  List,
+} from 'lucide-react';
 import { useFestival } from '../../context/FestivalContext';
 import { useAuth } from '../../context/AuthContext';
 import useRecords from '../../hooks/useRecords';
@@ -8,7 +19,11 @@ import { recordConfig } from './config';
 import RecordForm from './RecordForm';
 import ReviewDialog from './ReviewDialog';
 import Modal from '../../components/Modal';
-import { ErrorNotice, Loading, EmptyState, StatusBadge } from '../../components/Feedback';
+import { ErrorNotice, Loading, EmptyState } from '../../components/Feedback';
+import Toast from '../../components/Toast';
+import FinancialSummary from './FinancialSummary';
+import RecordList from './RecordList';
+import BudgetCards from './BudgetCards';
 import { exportRecords } from '../../api/records';
 import { errorMessage } from '../../api/client';
 import { categories } from '../../utils/format';
@@ -28,6 +43,8 @@ export default function RecordsPage({ resource }) {
   const [exporting, setExporting] = useState(false);
   const [actionError, setActionError] = useState('');
   const [notice, setNotice] = useState('');
+  const [summaryRevision, setSummaryRevision] = useState(0);
+  const [view, setView] = useState('cards');
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 250);
     return () => clearTimeout(timer);
@@ -79,6 +96,7 @@ export default function RecordsPage({ resource }) {
     setEditing(undefined);
     setSelected(null);
     setNotice('Record saved successfully.');
+    setSummaryRevision((value) => value + 1);
     records.reload();
   };
   const canWrite = config.writeRoles.includes(user.role);
@@ -111,19 +129,68 @@ export default function RecordsPage({ resource }) {
           </button>
         )}
       </div>
-      {notice && (
-        <p className="notice success" role="status">
-          {notice}
-        </p>
-      )}
+      <Toast message={notice} onClose={() => setNotice('')} />
       {actionError && <ErrorNotice message={actionError} />}
+      {['expenses', 'payments', 'plans'].includes(resource) && (
+        <FinancialSummary resource={resource} year={year} revision={summaryRevision} />
+      )}
+      {resource === 'members' && (
+        <div className="record-context">
+          <Users size={19} />
+          <span>
+            <strong>A community made by its people.</strong> Manage responsibilities, contact
+            details, and active volunteers.
+          </span>
+        </div>
+      )}
+      {resource === 'audit' && (
+        <div className="record-context">
+          <ShieldCheck size={19} />
+          <span>
+            <strong>Clarity in every change.</strong> Review who changed a record, when it happened,
+            and the before-and-after details.
+          </span>
+        </div>
+      )}
       <section className="panel records-panel">
+        <div className="records-heading">
+          <h2>
+            {resource === 'members'
+              ? 'Member directory'
+              : resource === 'audit'
+                ? 'Activity history'
+                : resource === 'plans'
+                  ? 'Festival plans'
+                  : 'All entries'}
+            {!records.loading && !records.error && (
+              <span className="count-pill">{records.count}</span>
+            )}
+          </h2>
+          {resource === 'plans' && (
+            <div className="segmented-control" role="group" aria-label="Budget view">
+              <button aria-pressed={view === 'cards'} onClick={() => setView('cards')}>
+                <LayoutGrid size={13} />
+                Cards
+              </button>
+              <button aria-pressed={view === 'table'} onClick={() => setView('table')}>
+                <List size={13} />
+                Table
+              </button>
+            </div>
+          )}
+        </div>
         <div className="table-toolbar">
           <label className="search-field">
             <Search size={17} />
             <input
               aria-label={`Search ${config.title}`}
-              placeholder="Search records…"
+              placeholder={
+                resource === 'members'
+                  ? 'Search members…'
+                  : resource === 'payments'
+                    ? 'Search contributions…'
+                    : 'Search records…'
+              }
               value={search}
               onChange={(e) => changeFilter('search', e.target.value)}
             />
@@ -183,59 +250,27 @@ export default function RecordsPage({ resource }) {
           <EmptyState
             title="No matching records"
             description="Try a different filter or add a record for this festival year."
+            action={
+              canWrite ? (
+                <button className="button primary" onClick={() => setEditing(null)}>
+                  <Plus size={16} />
+                  Add {config.singular}
+                </button>
+              ) : null
+            }
           />
+        ) : resource === 'plans' && view === 'cards' ? (
+          <BudgetCards records={records.results} canWrite={canWrite} onEdit={setEditing} />
         ) : (
-          <div className="table-scroll">
-            <table>
-              <caption className="sr-only">
-                {config.title} for festival year {year}
-              </caption>
-              <thead>
-                <tr>
-                  {config.columns.map(([key, title]) => (
-                    <th scope="col" key={key}>
-                      {title}
-                    </th>
-                  ))}
-                  <th scope="col">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {records.results.map((record) => (
-                  <tr key={record.id}>
-                    {config.columns.map(([key, , render]) => (
-                      <td key={key}>
-                        {key === 'status' ? (
-                          <StatusBadge value={record[key]} />
-                        ) : render ? (
-                          render(record[key])
-                        ) : (
-                          record[key] || '—'
-                        )}
-                      </td>
-                    ))}
-                    <td>
-                      {config.review ? (
-                        <button className="table-action" onClick={() => setSelected(record)}>
-                          View / review
-                        </button>
-                      ) : resource === 'audit' ? (
-                        <button className="table-action" onClick={() => setSelected(record)}>
-                          Changes
-                        </button>
-                      ) : canWrite ? (
-                        <button className="table-action" onClick={() => setEditing(record)}>
-                          Edit
-                        </button>
-                      ) : (
-                        '—'
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <RecordList
+            resource={resource}
+            config={config}
+            records={records.results}
+            year={year}
+            canWrite={canWrite}
+            onEdit={setEditing}
+            onSelect={setSelected}
+          />
         )}
         <div className="table-footer">
           <span>

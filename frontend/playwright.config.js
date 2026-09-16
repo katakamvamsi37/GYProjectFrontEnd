@@ -14,6 +14,7 @@ const testPython = process.env.GY_TEST_PYTHON || 'python';
 
 export default defineConfig({
   testDir: './tests',
+  testIgnore: '**/ui/**',
   timeout: 60000,
   expect: { timeout: 15000 },
   fullyParallel: false,

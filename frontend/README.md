@@ -53,3 +53,58 @@ npm test
 
 The test runner uses the backend repository's `scripts/test_server.py` fixtures.
 It overrides the frontend API URL for the tests and does not use Render's database.
+
+## Interface and appearance
+
+The workspace uses Tailwind CSS 4 through its Vite plugin, locally served Inter,
+Lucide icons, and Recharts. Theme tokens live in `src/styles/tokens.css`; shared
+controls and page styles remain in the existing `src/styles` directory.
+
+- Choose Light, Dark, or System in the header or sign-in page. The same choices
+  are available in My profile & settings. Appearance persists in `gy_theme`;
+  System follows live OS changes. An early script prevents a wrong-theme flash.
+- The sidebar collapses on desktop and becomes a keyboard-accessible drawer on
+  mobile. Record tables become cards on small screens. Festival budgets have
+  card and table views using the existing budget and target-date fields.
+- Collections, expenses, and budgets show year-wide summaries from the existing
+  dashboard API. Search/status/category filters affect the records list; the
+  summary remains for the selected festival year. Unsupported pledge balances,
+  payment-completion metrics, and event APIs are not added.
+- Existing routes, authentication/session storage, permissions, independent
+  financial review, exports, profile uploads, and password management are kept.
+  Account settings are in `/profile`; financial reporting stays in `/home` and
+  the existing financial screens. Motion respects reduced-motion preferences.
+
+### Original brand images
+
+The image previews supplied in chat were not available as local image files.
+The interface currently uses the community name as text. To finish the official
+branding, place the two original files in `src/assets/brand/`:
+
+- `ganesh-youth-2026.png`: official square logo, also accepting `.jpg`, `.jpeg`,
+  or `.webp`. `Logo` displays this unmodified with `object-contain` in the sidebar,
+  mobile header, sign-in visual, and dashboard hero.
+- `ganesh-festival.png`: supporting portrait image, with the same supported
+  extensions. This is used subtly in the sign-in visual only.
+
+Rebuild after adding the images. Do not substitute or recreate the official logo.
+
+### Frontend checks without a backend checkout
+
+```powershell
+npm run dev
+npm run lint
+npm run build
+npm run test:frontend
+```
+
+The isolated Playwright suite uses Microsoft Edge and API fixtures **only inside
+tests**. It covers every route at desktop/mobile widths in all three themes,
+system theme changes and persistence, keyboard controls, responsive layouts,
+member submission, review/export request contracts, failed submissions, retry,
+empty states, and role restrictions. Production components always use the real
+API. Screenshots are written under `test-results/`.
+
+`npm test` continues to run the original backend integration suite and requires
+the separate backend checkout and Python environment described above. UI fixture
+tests do not establish that a deployed backend is reachable or behaving correctly.

@@ -66,10 +66,10 @@ export default function ReviewDialog({ resource, record, year, onClose, onSaved 
           <p className="notice info">Another administrator or treasurer must review your entry.</p>
         )}
         {allowed && (
-          <form onSubmit={submit} className="review-form">
+          <form onSubmit={submit} className="review-form" aria-busy={busy}>
             <label>
               Decision
-              <select value={action} onChange={(e) => setAction(e.target.value)}>
+              <select disabled={busy} value={action} onChange={(e) => setAction(e.target.value)}>
                 {record.status === 'pending' ? (
                   <>
                     <option value="approve">Approve entry</option>
@@ -84,6 +84,7 @@ export default function ReviewDialog({ resource, record, year, onClose, onSaved 
               Review reason
               <textarea
                 required
+                disabled={busy}
                 rows={3}
                 maxLength={500}
                 placeholder="Describe the evidence checked or the reason for this decision."
@@ -92,7 +93,11 @@ export default function ReviewDialog({ resource, record, year, onClose, onSaved 
               />
             </label>
             {error && <ErrorNotice message={error} />}
-            <button className="button primary" disabled={busy}>
+            <button
+              className={`button ${action === 'approve' ? 'primary' : 'danger'}`}
+              disabled={busy}
+            >
+              {busy && <span className="spinner" />}
               {busy ? 'Saving decision…' : 'Save review decision'}
             </button>
           </form>

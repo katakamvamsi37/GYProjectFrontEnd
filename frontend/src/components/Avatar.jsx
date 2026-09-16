@@ -7,7 +7,13 @@ export default function Avatar({ user, src = user.avatar_url, large = false }) {
       {src && src !== failedSource ? (
         <img src={src} alt={`${user.name}'s profile`} onError={() => setFailedSource(src)} />
       ) : (
-        user.name.slice(0, 2).toUpperCase()
+        user.name
+          .trim()
+          .split(/\s+/)
+          .map((part) => part[0])
+          .slice(0, 2)
+          .join('')
+          .toUpperCase()
       )}
     </span>
   );

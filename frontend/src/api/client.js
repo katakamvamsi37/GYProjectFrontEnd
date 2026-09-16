@@ -70,6 +70,8 @@ export function errorMessage(error) {
       ? 'Cannot reach the server. Check your connection and retry.'
       : error.message || 'Request failed.';
   const data = error.response.data;
+  if (error.response.status >= 500)
+    return 'The server is temporarily unavailable. Please try again in a moment.';
   if (typeof data === 'string') return 'The server could not complete this request.';
   return (
     Object.entries(data || {})

@@ -22,32 +22,42 @@ export default function SpendingChart({ data }) {
         >
           <defs>
             <linearGradient id="spend-gradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#ca6d42" stopOpacity={0.22} />
-              <stop offset="100%" stopColor="#ca6d42" stopOpacity={0.01} />
+              <stop offset="0%" stopColor="#f97316" stopOpacity={0.2} />
+              <stop offset="100%" stopColor="#f97316" stopOpacity={0.01} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="4 5" vertical={false} stroke="#eceae4" />
+          <CartesianGrid strokeDasharray="4 5" vertical={false} stroke="var(--line)" />
           <XAxis
             dataKey="month"
             axisLine={false}
             tickLine={false}
-            tick={{ fill: '#8a8881', fontSize: 11 }}
+            tick={{ fill: 'var(--muted)', fontSize: 11 }}
             dy={8}
           />
           <YAxis
             axisLine={false}
             tickLine={false}
-            tick={{ fill: '#8a8881', fontSize: 11 }}
+            tick={{ fill: 'var(--muted)', fontSize: 11 }}
             tickFormatter={(value) => (value >= 1000 ? `₹${value / 1000}k` : value)}
             width={60}
           />
-          <Tooltip formatter={(value) => money(value)} />
+          <Tooltip
+            formatter={(value) => money(value)}
+            contentStyle={{
+              background: 'var(--surface)',
+              border: '1px solid var(--line)',
+              borderRadius: 12,
+              color: 'var(--ink)',
+              fontSize: 12,
+            }}
+            itemStyle={{ color: 'var(--ink)' }}
+          />
           <Area
-            isAnimationActive={false}
+            isAnimationActive={!matchMedia('(prefers-reduced-motion: reduce)').matches}
             type="monotone"
             dataKey="amount"
             name="Approved expenses"
-            stroke="#c36238"
+            stroke="#f97316"
             strokeWidth={2.5}
             fill="url(#spend-gradient)"
           />

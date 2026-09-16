@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Wallet,
@@ -6,11 +5,14 @@ import {
   ArrowUpRight,
   ShieldCheck,
   Plus,
-  Flower2,
+  Heart,
+  Users,
   ClipboardCheck,
 } from 'lucide-react';
-import { getDashboard } from '../api/dashboard';
-import { errorMessage } from '../api/client';
+import useDashboard from '../hooks/useDashboard';
+import StatCard from '../components/StatCard';
+import Logo from '../components/Logo';
+import CategoryChart from '../features/dashboard/CategoryChart';
 import { useAuth } from '../context/AuthContext';
 import { useFestival } from '../context/FestivalContext';
 import { Loading, ErrorNotice, EmptyState, StatusBadge } from '../components/Feedback';
@@ -20,22 +22,9 @@ import SpendingChart from '../features/dashboard/SpendingChart';
 export default function Home() {
   const { year } = useFestival();
   const { user } = useAuth();
-  const [data, setData] = useState(null);
-  const [error, setError] = useState('');
-  const [revision, setRevision] = useState(0);
-  useEffect(() => {
-    const controller = new AbortController();
-    setData(null);
-    setError('');
-    getDashboard(year, controller.signal)
-      .then(({ data }) => {
-        if (!controller.signal.aborted) setData(data);
-      })
-      .catch((error) => {
-        if (!controller.signal.aborted) setError(errorMessage(error));
-      });
-    return () => controller.abort();
-  }, [year, revision]);
+  const { data, error, retry } = useDashboard(year);
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
   const management = managementRoles.includes(user.role);
   return (
     <>
@@ -45,7 +34,7 @@ export default function Home() {
             Festival overview<span className="heading-dot">.</span>
           </h1>
           <p>
-            Welcome, {user.name.split(' ')[0]}. Here’s where your {year} celebration stands.
+            {greeting}, {user.name.split(' ')[0]}. Here’s what’s happening in your community.
           </p>
         </div>
         {management && (
@@ -56,20 +45,38 @@ export default function Home() {
         )}
       </div>
       <section className="festival-banner">
-        <div>
-          <span className="eyebrow">CELEBRATE WITH PURPOSE</span>
-          <h2>One community. A thousand contributions.</h2>
-          <p>Keep the celebration joyful and the accounts clear.</p>
+        <div className="hero-orbits" aria-hidden="true" />
+        <div className="hero-copy">
+          <span className="eyebrow">GANESH YOUTH · CELEBRATING TOGETHER</span>
+          <h2>
+            One community.
+            <br />
+            <span>Countless reasons to celebrate.</span>
+          </h2>
+          <p>A little devotion, a shared purpose, and a celebration made possible by you.</p>
+          <div className="hero-chips">
+            <span className="hero-chip">
+              <Heart size={12} /> Built on togetherness
+            </span>
+            {data && (
+              <span className="hero-chip">
+                <Users size={12} />
+                {data.members} active members
+              </span>
+            )}
+            <span className="hero-chip">Festival workspace · {year}</span>
+          </div>
         </div>
-        <div className="banner-seal" aria-hidden="true">
-          <Flower2 size={65} />
-          <span>GANESH UTSAV {year}</span>
+        <div className="banner-seal">
+          <Logo variant="hero" label={false} />
+          <span className="hero-year">2026</span>
+          <span>GANESH YOUTH</span>
         </div>
       </section>
       {error ? (
-        <ErrorNotice message={error} onRetry={() => setRevision((x) => x + 1)} />
+        <ErrorNotice message={error} onRetry={retry} />
       ) : !data ? (
-        <Loading />
+        <Loading variant="dashboard" />
       ) : (
         <>
           <section className="metrics" aria-label="Festival financial summary">
@@ -97,16 +104,14 @@ export default function Home() {
                 'purple',
               ],
             ].map(([label, value, note, Icon, tone]) => (
-              <article className={`metric ${tone}`} key={label}>
-                <div className="metric-label">
-                  {label}
-                  <span className="metric-icon">
-                    <Icon size={18} />
-                  </span>
-                </div>
-                <strong>{money(value)}</strong>
-                <small>{note}</small>
-              </article>
+              <StatCard
+                key={label}
+                label={label}
+                value={value}
+                note={note}
+                icon={Icon}
+                tone={tone}
+              />
             ))}
           </section>
           <div className="dashboard-grid">
@@ -189,8 +194,12 @@ export default function Home() {
                 />
               ) : (
                 <div className="recent-list">
-                  {data.recent_expenses.map((item) => (
-                    <div className="recent-row" key={item.id}>
+                  {data.recent_expenses.map((item, index) => (
+                    <div
+                      className="recent-row"
+                      key={item.id}
+                      style={{ animationDelay: `${index * 40}ms` }}
+                    >
                       <span className="entry-symbol">
                         <ArrowUpRight size={18} />
                       </span>
@@ -220,30 +229,33 @@ export default function Home() {
                   description="Categories appear after expense approval."
                 />
               ) : (
-                <div className="category-list">
-                  {data.expenses_by_category.map((item, i) => (
-                    <div key={item.category}>
-                      <div>
-                        <span>
-                          <i
+                <>
+                  <CategoryChart data={data.expenses_by_category} total={data.spent} />
+                  <div className="category-list">
+                    {data.expenses_by_category.map((item, i) => (
+                      <div key={item.category}>
+                        <div>
+                          <span>
+                            <i
+                              style={{
+                                background: ['#f97316', '#f59e0b', '#10b981', '#818cf8'][i % 4],
+                              }}
+                            />
+                            {item.category}
+                          </span>
+                          <strong>{money(item.amount)}</strong>
+                        </div>
+                        <div className="progress-track">
+                          <span
                             style={{
-                              background: ['#c65c30', '#dfab52', '#568578', '#8582a3'][i % 4],
+                              width: `${Math.min(100, (Number(item.amount) / Number(data.spent || 1)) * 100)}%`,
                             }}
                           />
-                          {item.category}
-                        </span>
-                        <strong>{money(item.amount)}</strong>
+                        </div>
                       </div>
-                      <div className="progress-track">
-                        <span
-                          style={{
-                            width: `${Math.min(100, (Number(item.amount) / Number(data.spent || 1)) * 100)}%`,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                </>
               )}
             </section>
           </div>

@@ -1,5 +1,15 @@
-/* Entry point: foundations ? layout ? reusable controls ? page-specific styling. */
+﻿@import 'tailwindcss';
 @import './styles/tokens.css';
 @import './styles/layout.css';
 @import './styles/components.css';
 @import './styles/pages.css';
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+@theme inline {
+  --font-sans: 'Inter Variable', Inter, ui-sans-serif, system-ui, sans-serif;
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+}
